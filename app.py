@@ -222,7 +222,7 @@ funnel_df = pd.DataFrame({
 
 bar = (
     alt.Chart(funnel_df)
-    .mark_bar(size=70, color="#4E79A7")
+    .mark_bar(size=50, color="#4E79A7")
     .encode(
         x=alt.X("Stage:N", sort=["Target", "Reach", "Open", "Click"], title="Funnel Stage"),
         y=alt.Y("Unique HCPs:Q", title="Unique HCP Count"),
@@ -231,55 +231,6 @@ bar = (
     .properties(height=350)
 )
 st.altair_chart(bar, use_container_width=True)
-
-# Prepare data for waterfall
-funnel_df = pd.DataFrame({
-    "Stage": ["Target", "Reach", "Open", "Click"],
-    "Unique HCPs": [tgt_hcps, rch_hcps, opn_hcps, clk_hcps]
-})
-
-# Calculate differences for waterfall
-funnel_df["Previous"] = funnel_df["Unique HCPs"].shift(1)
-funnel_df["Change"] = funnel_df["Unique HCPs"] - funnel_df["Previous"]
-funnel_df.loc[0, "Change"] = funnel_df.loc[0, "Unique HCPs"]
-funnel_df["Start"] = funnel_df["Previous"].fillna(0).cumsum()
-funnel_df["End"] = funnel_df["Start"] + funnel_df["Change"]
-
-# Assign colors for positive/negative segments
-funnel_df["Color"] = np.where(funnel_df["Change"] >= 0,
-                              "#59A14F",   # green for gain
-                              "#E15759")   # red for drop
-
-# Build waterfall chart
-base = alt.Chart(funnel_df).encode(
-    x=alt.X("Stage:N", title="Funnel Stage", sort=["Target", "Reach", "Open", "Click"]),
-    tooltip=[
-        alt.Tooltip("Stage:N"),
-        alt.Tooltip("Unique HCPs:Q", title="Unique HCP Count"),
-        alt.Tooltip("Change:Q", title="Δ from Previous")
-    ]
-)
-
-bars = base.mark_bar().encode(
-    y=alt.Y("Start:Q", title="Unique HCP Count"),
-    y2="End:Q",
-    color=alt.Color("Color:N", legend=None)
-)
-
-text = base.mark_text(
-    align="center",
-    baseline="bottom",
-    dy=-5,
-    color="black",
-    fontWeight="bold"
-).encode(
-    y="End:Q",
-    text=alt.Text("Unique HCPs:Q", format=",")
-)
-
-waterfall = (bars + text).properties(height=350)
-
-st.altair_chart(waterfall, use_container_width=True)
 
 # --- TABLE OF UNIQUE HCP FUNNEL RATES ---
 st.subheader("📊 Funnel Detail Table")
