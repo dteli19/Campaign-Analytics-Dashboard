@@ -4,8 +4,8 @@ import numpy as np
 import altair as alt
 
 # ---------------- Page Setup ----------------
-st.set_page_config(page_title="Campaign Analytics — Portfolio", page_icon="📊", layout="wide")
-st.title("📊 Campaign Analytics Dashboard — Portfolio App")
+st.set_page_config(page_title="Campaign Analytics", page_icon="📊", layout="wide")
+st.title("📊 Campaign Analytics Dashboard")
 st.write("---")
 
 # ---------------- Hardcoded Dummy Data (500 HCPs, 2 brands, 4 campaigns, 1 year) ----------------
