@@ -128,26 +128,31 @@ mask = (
 )
 filtered = df[mask]
 
-# ---------------- KPI CALCULATIONS ----------------
-def kpis(d):
-    tgt = int(d["target (1 or 0)"].sum())
-    rch = int(d["reach (1 or 0)"].sum())
-    opn = int(d["open (1 or 0)"].sum())
-    clk = int(d["click (1 or 0)"].sum())
-    reach_rate = rch / tgt if tgt else 0
-    open_rate = opn / rch if rch else 0
-    ctor = clk / opn if opn else 0
-    return tgt, rch, opn, clk, reach_rate, open_rate, ctor
+# --- KPI CALCULATIONS BASED ON UNIQUE HCPs ---
+def unique_kpis(d):
+    # Unique HCPs at each funnel stage
+    tgt_hcps = d.loc[d["target (1 or 0)"] == 1, "hcp id"].nunique()
+    rch_hcps = d.loc[d["reach (1 or 0)"] == 1, "hcp id"].nunique()
+    opn_hcps = d.loc[d["open (1 or 0)"] == 1, "hcp id"].nunique()
+    clk_hcps = d.loc[d["click (1 or 0)"] == 1, "hcp id"].nunique()
 
-tgt, rch, opn, clk, reach_rate, open_rate, ctor = kpis(filtered)
+    # Funnel metrics
+    reach_rate = rch_hcps / tgt_hcps if tgt_hcps else 0
+    open_rate = opn_hcps / rch_hcps if rch_hcps else 0
+    ctor = clk_hcps / opn_hcps if opn_hcps else 0
 
-# ---------------- KPI CARDS ----------------
+    return tgt_hcps, rch_hcps, opn_hcps, clk_hcps, reach_rate, open_rate, ctor
+
+
+tgt_hcps, rch_hcps, opn_hcps, clk_hcps, reach_rate, open_rate, ctor = unique_kpis(filtered)
+
+# --- KPI CARDS (Refreshed with unique counts) ---
 st.write("---")
-st.subheader("📈 Engagement KPIs")
+st.subheader("📈 Unique HCP Engagement KPIs")
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.markdown(f"<div style='background-color:#E8EEF9;padding:20px;border-radius:10px;text-align:center;'><h3>{tgt:,}</h3><p>Targeted HCPs</p></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='background-color:#E8EEF9;padding:20px;border-radius:10px;text-align:center;'><h3>{tgt_hcps:,}</h3><p>Targeted HCPs</p></div>", unsafe_allow_html=True)
 with col2:
     st.markdown(f"<div style='background-color:#DDEFE2;padding:20px;border-radius:10px;text-align:center;'><h3>{reach_rate:.0%}</h3><p>Reach Rate</p></div>", unsafe_allow_html=True)
 with col3:
@@ -155,55 +160,45 @@ with col3:
 with col4:
     st.markdown(f"<div style='background-color:#F8D7DA;padding:20px;border-radius:10px;text-align:center;'><h3>{ctor:.0%}</h3><p>Click-to-Open (CTOR)</p></div>", unsafe_allow_html=True)
 
-# ---------------- FUNNEL CHART ----------------
+# --- FUNNEL BAR CHART (Unique HCPs per stage) ---
 st.write("---")
 st.subheader("🎯 Funnel Summary")
+
 funnel_df = pd.DataFrame({
     "Stage": ["Target", "Reach", "Open", "Click"],
-    "Count": [tgt, rch, opn, clk]
+    "Unique HCPs": [tgt_hcps, rch_hcps, opn_hcps, clk_hcps]
 })
+
 bar = (
     alt.Chart(funnel_df)
-    .mark_bar(size=60, color="#4E79A7")
-    .encode(x=alt.X("Stage:N", sort=["Target", "Reach", "Open", "Click"]),
-            y=alt.Y("Count:Q", title="HCP Count"),
-            tooltip=["Stage", "Count"])
-    .properties(height=300)
-)
-st.altair_chart(bar, use_container_width=True)
-
-# ---------------- MONTHLY TREND ----------------
-st.subheader("📅 Monthly Engagement Trend")
-trend = filtered.copy()
-trend["month"] = trend["date of campaign"].dt.to_period("M").astype(str)
-monthly = trend.groupby("month")[["target (1 or 0)", "reach (1 or 0)", "open (1 or 0)", "click (1 or 0)"]].sum().reset_index()
-monthly_long = monthly.melt("month", var_name="Stage", value_name="Count")
-
-line_chart = (
-    alt.Chart(monthly_long)
-    .mark_line(point=True)
+    .mark_bar(size=70, color="#4E79A7")
     .encode(
-        x="month:N",
-        y="Count:Q",
-        color="Stage:N",
-        strokeDash="Stage:N",
-        tooltip=["month", "Stage", "Count"]
+        x=alt.X("Stage:N", sort=["Target", "Reach", "Open", "Click"], title="Funnel Stage"),
+        y=alt.Y("Unique HCPs:Q", title="Unique HCP Count"),
+        tooltip=["Stage", "Unique HCPs"]
     )
     .properties(height=350)
 )
-st.altair_chart(line_chart, use_container_width=True)
+st.altair_chart(bar, use_container_width=True)
 
-# ---------------- TABLE ----------------
+# --- TABLE OF UNIQUE HCP FUNNEL RATES ---
 st.subheader("📊 Funnel Detail Table")
+
 tbl = pd.DataFrame({
     "Stage": ["Target", "Reach", "Open", "Click"],
-    "Count": [tgt, rch, opn, clk],
-    "Rate vs Previous": [1.0,
-                         rch / tgt if tgt else np.nan,
-                         opn / rch if rch else np.nan,
-                         clk / opn if opn else np.nan]
+    "Unique HCPs": [tgt_hcps, rch_hcps, opn_hcps, clk_hcps],
+    "Rate vs Previous Stage": [
+        1.0,
+        rch_hcps / tgt_hcps if tgt_hcps else np.nan,
+        opn_hcps / rch_hcps if rch_hcps else np.nan,
+        clk_hcps / opn_hcps if opn_hcps else np.nan
+    ]
 })
-st.dataframe(tbl.style.format({"Count": "{:,.0f}", "Rate vs Previous": "{:.0%}"}).highlight_max(subset=["Count"], color="#D0E0FF"), use_container_width=True)
 
-st.write("---")
-st.caption("💡 Demo project with dummy data for portfolio visualization — Dhwani Teli (MS Business Analytics)")
+st.dataframe(
+    tbl.style
+    .format({"Unique HCPs": "{:,.0f}", "Rate vs Previous Stage": "{:.0%}"})
+    .highlight_max(subset=["Unique HCPs"], color="#CFE2F3"),
+    use_container_width=True
+)
+
