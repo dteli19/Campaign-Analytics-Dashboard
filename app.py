@@ -18,7 +18,7 @@ def build_dummy(seed=17, n_rows=6000):
                           "Brand B": ["Campaign B1", "Campaign B2"]}
     specialties = ["Cardiologist", "Oncologist", "Pediatrician", "Dermatologist",
                    "Endocrinologist", "Neurologist"]
-    regions = ["N", "S", "E", "W"]
+    regions = ["North", "South", "East", "West"]
 
     dates = pd.date_range("2024-01-01", "2024-12-31", freq="D")
     hcp_pool = [f"HCP{str(i).zfill(5)}" for i in range(1000, 1500)]  # exactly 500 HCPs
@@ -60,7 +60,7 @@ def build_dummy(seed=17, n_rows=6000):
         "open (1 or 0)": open_.astype(int),
         "click (1 or 0)": click.astype(int),
         "hcp specialty": hcp_specialty,
-        "hcp region (N/S/E/W)": hcp_region,
+        "hcp region (North/South/East/West)": hcp_region,
     })
     return df
 
@@ -91,7 +91,7 @@ st.header("About the Data")
 st.markdown(
     """
 This dataset is **simulated** for demonstration:
-- **500 HCPs** across **6 specialties** and **4 regions (N/S/E/W)**
+- **500 HCPs** across **6 specialties** and **4 regions (North/South/East/West)**
 - **2 brands** (*Brand A*, *Brand B*), **4 campaigns** (2 per brand)
 - 1 year of touchpoints (2024) with binary funnel events: **target**, **reach**, **open**, **click**
 """
@@ -123,7 +123,7 @@ with c4:
 mask = (
     df["brand name"].isin(f_brand) &
     df["campaign name"].isin(f_campaign) &
-    df["hcp region (N/S/E/W)"].isin(f_region) &
+    df["hcp region (North/South/East/West)"].isin(f_region) &
     df["hcp specialty"].isin(f_specialty)
 )
 filtered = df[mask]
