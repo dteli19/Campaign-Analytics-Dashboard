@@ -14,8 +14,8 @@ def build_dummy(seed=17, n_rows=6000):
     rng = np.random.default_rng(seed)
 
     brands = ["Brand A", "Brand B"]
-    campaigns_by_brand = {"Brand A": ["Awareness", "Engagement"],
-                          "Brand B": ["Retention", "New Launch"]}
+    campaigns_by_brand = {"Brand A": ["Campaign A1", "Campaign A2"],
+                          "Brand B": ["Campaign B1", "Campaign B2"]}
     specialties = ["Cardiologist", "Oncologist", "Pediatrician", "Dermatologist",
                    "Endocrinologist", "Neurologist"]
     regions = ["N", "S", "E", "W"]
