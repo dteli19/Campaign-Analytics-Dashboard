@@ -160,6 +160,56 @@ with col3:
 with col4:
     st.markdown(f"<div style='background-color:#F8D7DA;padding:20px;border-radius:10px;text-align:center;'><h3>{ctor:.0%}</h3><p>Click-to-Open (CTOR)</p></div>", unsafe_allow_html=True)
 
+# ---------------- MONTHLY TREND (Unique HCPs) ----------------
+st.write("---")
+st.subheader("📅 Monthly Engagement Trend (Unique HCPs)")
+
+# Create month column
+trend = filtered.copy()
+trend["month"] = trend["date of campaign"].dt.to_period("M").astype(str)
+
+# Calculate unique HCPs for each stage per month
+monthly_unique = (
+    trend.groupby("month")
+    .agg({
+        "hcp id": "nunique",
+        "target (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique(),
+        "reach (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique(),
+        "open (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique(),
+        "click (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique()
+    })
+    .rename(columns={
+        "hcp id": "Total HCPs",
+        "target (1 or 0)": "Target",
+        "reach (1 or 0)": "Reach",
+        "open (1 or 0)": "Open",
+        "click (1 or 0)": "Click"
+    })
+    .reset_index()
+)
+
+# Melt data for Altair
+monthly_long = monthly_unique.melt("month", var_name="Stage", value_name="Unique HCPs")
+
+# Create line chart
+trend_chart = (
+    alt.Chart(monthly_long)
+    .mark_line(point=True)
+    .encode(
+        x=alt.X("month:N", title="Month", sort=None),
+        y=alt.Y("Unique HCPs:Q", title="Unique HCP Count"),
+        color=alt.Color("Stage:N", title="Stage"),
+        tooltip=["month", "Stage", "Unique HCPs"]
+    )
+    .properties(height=350)
+    .configure_axis(labelFontSize=12, titleFontSize=13)
+)
+
+st.altair_chart(trend_chart, use_container_width=True)
+
+st.caption("Trend shows unique HCP engagement growth across months by funnel stage.")
+
+
 # --- FUNNEL BAR CHART (Unique HCPs per stage) ---
 st.write("---")
 st.subheader("🎯 Funnel Summary")
@@ -210,7 +260,6 @@ st.markdown("""
 Below are sample snapshots from this portfolio dashboard illustrating:
 - The **Overview KPIs**  
 - The **Funnel Summary (Unique HCP Counts)**  
-- The **Monthly Engagement Trend**
 """)
 
 col1, col2 = st.columns(2)
