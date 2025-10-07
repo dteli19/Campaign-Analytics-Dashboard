@@ -202,3 +202,20 @@ st.dataframe(
     use_container_width=True
 )
 
+# ---------------- SCREENSHOTS SECTION ----------------
+st.write("---")
+st.header("📸 Dashboard Screenshots")
+
+st.markdown("""
+Below are sample snapshots from this portfolio dashboard illustrating:
+- The **Overview KPIs**  
+- The **Funnel Summary (Unique HCP Counts)**  
+- The **Monthly Engagement Trend**
+""")
+
+col1, col2 = st.columns(2)
+with col1:
+    st.image("Overview.png", caption="Overview Page")
+    
+with col2:
+    st.image("Trend.png", caption="Annual Trend")
