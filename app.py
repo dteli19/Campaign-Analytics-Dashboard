@@ -160,16 +160,16 @@ with col3:
 with col4:
     st.markdown(f"<div style='background-color:#F8D7DA;padding:20px;border-radius:10px;text-align:center;'><h3>{ctor:.0%}</h3><p>Click-to-Open (CTOR)</p></div>", unsafe_allow_html=True)
 
-# ---------------- MONTHLY TREND (Unique HCPs) ----------------
+# ---------------- QUARTERLY TREND (Unique HCPs) ----------------
 st.write("---")
-st.subheader("📅 Engagement Trend")
+st.subheader("📅 Quarterly Engagement Trend (Unique HCPs)")
 
-# Create month column
+# Create quarter column
 trend = filtered.copy()
 trend["quarter"] = trend["date of campaign"].dt.to_period("Q").astype(str)
 
-# Calculate unique HCPs for each stage per month
-monthly_unique = (
+# Calculate unique HCPs for each stage per quarter
+quarterly_unique = (
     trend.groupby("quarter")
     .agg({
         "target (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique(),
@@ -187,17 +187,21 @@ monthly_unique = (
 )
 
 # Melt data for Altair
-monthly_long = monthly_unique.melt("quarter", var_name="Stage", value_name="Unique HCPs")
+quarter_long = quarterly_unique.melt("quarter", var_name="Stage", value_name="Unique HCPs")
 
 # Create line chart
 trend_chart = (
-    alt.Chart(quarterly_long)
+    alt.Chart(quarter_long)
     .mark_line(point=True)
     .encode(
-        x=alt.X("Quarter:N", title="Quarter", sort=None),
+        x=alt.X("quarter:N", title="Quarter", sort=["2024Q1", "2024Q2", "2024Q3", "2024Q4"]),
         y=alt.Y("Unique HCPs:Q", title="Unique HCP Count"),
-        color=alt.Color("Stage:N", title="Stage"),
-        tooltip=["month", "Stage", "Unique HCPs"]
+        color=alt.Color("Stage:N", title="Stage",
+                        scale=alt.Scale(
+                            domain=["Target", "Reach", "Open", "Click"],
+                            range=["#4E79A7", "#59A14F", "#F1C232", "#E15759"]
+                        )),
+        tooltip=["quarter", "Stage", "Unique HCPs"]
     )
     .properties(height=350)
     .configure_axis(labelFontSize=12, titleFontSize=13)
@@ -205,8 +209,7 @@ trend_chart = (
 
 st.altair_chart(trend_chart, use_container_width=True)
 
-st.caption("Trend shows unique HCP engagement growth across months by funnel stage.")
-
+st.caption("Trend shows unique HCP engagement across quarters by funnel stage (Target → Reach → Open → Click).")
 
 # --- FUNNEL BAR CHART (Unique HCPs per stage) ---
 st.write("---")
