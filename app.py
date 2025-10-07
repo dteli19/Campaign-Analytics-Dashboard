@@ -162,7 +162,7 @@ with col4:
 
 # ---------------- QUARTERLY TREND (Unique HCPs) ----------------
 st.write("---")
-st.subheader("📅 Quarterly Engagement Trend (Unique HCPs)")
+st.subheader("📅 Engagement Trend")
 
 # Create quarter column
 trend = filtered.copy()
@@ -192,7 +192,7 @@ quarter_long = quarterly_unique.melt("quarter", var_name="Stage", value_name="Un
 # Create line chart
 trend_chart = (
     alt.Chart(quarter_long)
-    .mark_line(point=True)
+    .mark_bar(point=True)
     .encode(
         x=alt.X("quarter:N", title="Quarter", sort=["2024Q1", "2024Q2", "2024Q3", "2024Q4"]),
         y=alt.Y("Unique HCPs:Q", title="Unique HCP Count"),
