@@ -3,7 +3,7 @@
 ## 🧩 Overview  
 This Power BI dashboard provides an interactive analysis of **marketing campaign performance** across two pharmaceutical brands — *Brand A* and *Brand B* — over the course of a year. Each brand ran two campaigns targeted toward 500 healthcare professionals (HCPs).  
 
-🔗 [Live Streamlit App](https://fg9rjtkknvjuekpohune7f.streamlit.app/)
+🔗 [Live Streamlit App](https://edk6vdhpapptpyv2fxgjdmf.streamlit.app/)
 
 The purpose of the dashboard is to visualize **engagement effectiveness** across the campaign funnel:  
 **Target → Reach → Open → Click**, and to identify patterns by **brand, region, and HCP specialty.**
