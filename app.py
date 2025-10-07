@@ -4,12 +4,10 @@ import pandas as pd
 import numpy as np
 import altair as alt
 
-# ---------------- Page Setup ----------------
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Campaign Analytics — Portfolio", page_icon="📊", layout="wide")
-st.title("📊 Campaign Analytics Dashboard — Portfolio App")
-st.write("---")
 
-# ---------------- Hardcoded Dummy Data (500 HCPs, 2 brands, 4 campaigns, 1 year) ----------------
+# ---------------- DUMMY DATA ----------------
 def build_dummy(seed=17, n_rows=6000):
     np.random.seed(seed)
     rng = np.random.default_rng(seed)
@@ -22,7 +20,7 @@ def build_dummy(seed=17, n_rows=6000):
     regions = ["N", "S", "E", "W"]
 
     dates = pd.date_range("2024-01-01", "2024-12-31", freq="D")
-    hcp_pool = [f"HCP{str(i).zfill(5)}" for i in range(1000, 1500)]  # exactly 500 HCPs
+    hcp_pool = [f"HCP{str(i).zfill(5)}" for i in range(1000, 1500)]
 
     hcp_ids = rng.choice(hcp_pool, size=n_rows, replace=True)
     brand_name = rng.choice(brands, size=n_rows, replace=True)
@@ -31,7 +29,6 @@ def build_dummy(seed=17, n_rows=6000):
     hcp_specialty = rng.choice(specialties, size=n_rows, replace=True)
     hcp_region = rng.choice(regions, size=n_rows, replace=True, p=[0.3, 0.25, 0.25, 0.2])
 
-    # Funnel dependencies
     target = rng.choice([0, 1], size=n_rows, replace=True, p=[0.15, 0.85])
     reach = np.where(target == 1, rng.choice([0, 1], size=n_rows, replace=True, p=[0.32, 0.68]), 0)
 
@@ -67,140 +64,124 @@ def build_dummy(seed=17, n_rows=6000):
 
 df = build_dummy()
 
-# ---------------- Sections ----------------
-st.header("Context")
-st.markdown(
-    """
-Pharma brands use multi-touch campaigns to engage healthcare professionals (HCPs). Stakeholders need a simple,
-repeatable view to understand how well campaigns move HCPs through the funnel (**Target → Reach → Open → Click**),
-and which segments (brand, campaign, region, specialty) drive the most engagement.
-"""
-)
-
-st.header("Problem Statement")
-st.markdown(
-    """
-**Goal:** Provide a compact analytics app to:
-- Evaluate campaign effectiveness over a year  
-- Compare two brands and their campaigns (2 each)  
-- Spot high-engagement HCP segments by region/specialty  
-- Summarize results for a portfolio-ready narrative
-"""
-)
-
-st.header("About the Data (Dummy)")
-st.markdown(
-    """
-This dataset is **simulated** for demonstration:
-- **500 HCPs** across **6 specialties** and **4 regions (N/S/E/W)**
-- **2 brands** (*Brand A*, *Brand B*), **4 campaigns** (2 per brand)
-- 1 year of touchpoints (2024) with binary funnel events: **target**, **reach**, **open**, **click**
-"""
-)
-
-st.header("Actions")
-st.markdown(
-    """
-1) Generated a realistic dummy dataset with dependencies between funnel stages.  
-2) Built filters for brand, campaign, region, and specialty.  
-3) Computed KPIs and constructed a quarterly engagement trend and funnel summary.
-"""
-)
-
-# ---------------- Filters ----------------
+# ---------------- HEADER ----------------
+st.markdown("<h1 style='text-align:center; color:#2F5496;'>📊 Campaign Analytics Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("<h5 style='text-align:center; color:gray;'>Portfolio Demo — Dhwani Teli</h5>", unsafe_allow_html=True)
 st.write("---")
-st.subheader("Interactive Filters")
+
+# ---------------- CONTEXT SECTIONS ----------------
+with st.expander("🧩 Context & Problem Statement", expanded=True):
+    st.markdown("""
+**Context:**  
+Two pharmaceutical brands — *Brand A* and *Brand B* — ran a total of four digital campaigns in 2024 targeting 500 healthcare professionals (HCPs).  
+The goal is to evaluate how effectively each campaign moved HCPs through the marketing funnel (**Target → Reach → Open → Click**)  
+and identify which segments (region or specialty) performed best.  
+
+**Problem Statement:**  
+Marketing teams need a clear view of campaign performance to:
+- Measure overall engagement across campaigns  
+- Compare effectiveness by brand and campaign  
+- Identify audience segments driving higher engagement  
+""")
+
+# ---------------- FILTERS ----------------
+st.write("---")
+st.markdown("### 🔍 Filter Campaign Data")
+
 c1, c2, c3, c4 = st.columns(4)
 with c1:
-    f_brands = st.multiselect("Brand", sorted(df["brand name"].unique()), default=sorted(df["brand name"].unique()))
+    f_brand = st.multiselect("Select Brand(s)", df["brand name"].unique(), default=list(df["brand name"].unique()))
 with c2:
-    # Filter campaign choices by selected brands
-    possible_camps = df[df["brand name"].isin(f_brands)]["campaign name"].unique() if f_brands else []
-    f_campaigns = st.multiselect("Campaign", sorted(possible_camps), default=sorted(possible_camps))
+    f_campaign = st.multiselect("Select Campaign(s)", df["campaign name"].unique(), default=list(df["campaign name"].unique()))
 with c3:
-    f_regions = st.multiselect("Region (N/S/E/W)", sorted(df["hcp region (N/S/E/W)"].unique()),
-                               default=sorted(df["hcp region (N/S/E/W)"].unique()))
+    f_region = st.multiselect("Select Region(s)", df["hcp region (N/S/E/W)"].unique(), default=list(df["hcp region (N/S/E/W)"].unique()))
 with c4:
-    f_specs = st.multiselect("HCP Specialty", sorted(df["hcp specialty"].unique()),
-                             default=sorted(df["hcp specialty"].unique()))
+    f_specialty = st.multiselect("Select Specialty(s)", df["hcp specialty"].unique(), default=list(df["hcp specialty"].unique()))
 
 mask = (
-    df["brand name"].isin(f_brands) &
-    df["campaign name"].isin(f_campaigns if f_campaigns else df["campaign name"].unique()) &
-    df["hcp region (N/S/E/W)"].isin(f_regions) &
-    df["hcp specialty"].isin(f_specs)
+    df["brand name"].isin(f_brand) &
+    df["campaign name"].isin(f_campaign) &
+    df["hcp region (N/S/E/W)"].isin(f_region) &
+    df["hcp specialty"].isin(f_specialty)
 )
-df_f = df[mask].copy()
+filtered = df[mask]
 
-# ---------------- KPIs ----------------
-def calc_kpis(d):
-    tgt = int((d["target (1 or 0)"] == 1).sum())
-    rch = int((d["reach (1 or 0)"] == 1).sum())
-    opn = int((d["open (1 or 0)"] == 1).sum())
-    clk = int((d["click (1 or 0)"] == 1).sum())
-    reach_rate = (rch / tgt) if tgt else 0
-    open_rate = (opn / rch) if rch else 0
-    ctor = (clk / opn) if opn else 0
+# ---------------- KPI CALCULATIONS ----------------
+def kpis(d):
+    tgt = int(d["target (1 or 0)"].sum())
+    rch = int(d["reach (1 or 0)"].sum())
+    opn = int(d["open (1 or 0)"].sum())
+    clk = int(d["click (1 or 0)"].sum())
+    reach_rate = rch / tgt if tgt else 0
+    open_rate = opn / rch if rch else 0
+    ctor = clk / opn if opn else 0
     return tgt, rch, opn, clk, reach_rate, open_rate, ctor
 
-tgt, rch, opn, clk, reach_rate, open_rate, ctor = calc_kpis(df_f)
+tgt, rch, opn, clk, reach_rate, open_rate, ctor = kpis(filtered)
 
-st.header("Results")
-st.markdown("Key funnel metrics for the current selection:")
+# ---------------- KPI CARDS ----------------
+st.write("---")
+st.subheader("📈 Engagement KPIs")
 
-m1, m2, m3, m4, m5, m6, m7 = st.columns(7)
-m1.metric("Target Count", f"{tgt:,}")
-m2.metric("Reach Count", f"{rch:,}")
-m3.metric("Open Count", f"{opn:,}")
-m4.metric("Click Count", f"{clk:,}")
-m5.metric("Reach Rate", f"{reach_rate:.0%}")
-m6.metric("Open Rate", f"{open_rate:.0%}")
-m7.metric("Click-to-Open (CTOR)", f"{ctor:.0%}")
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.markdown(f"<div style='background-color:#E8EEF9;padding:20px;border-radius:10px;text-align:center;'><h3>{tgt:,}</h3><p>Targeted HCPs</p></div>", unsafe_allow_html=True)
+with col2:
+    st.markdown(f"<div style='background-color:#DDEFE2;padding:20px;border-radius:10px;text-align:center;'><h3>{reach_rate:.0%}</h3><p>Reach Rate</p></div>", unsafe_allow_html=True)
+with col3:
+    st.markdown(f"<div style='background-color:#FFF3CD;padding:20px;border-radius:10px;text-align:center;'><h3>{open_rate:.0%}</h3><p>Open Rate</p></div>", unsafe_allow_html=True)
+with col4:
+    st.markdown(f"<div style='background-color:#F8D7DA;padding:20px;border-radius:10px;text-align:center;'><h3>{ctor:.0%}</h3><p>Click-to-Open (CTOR)</p></div>", unsafe_allow_html=True)
 
-# ---------------- Quarterly Trend ----------------
-st.markdown("#### Annual Engagement Trend (Quarterly)")
-qdf = df_f.copy()
-qdf["quarter"] = qdf["date of campaign"].dt.to_period("Q").astype(str)
-trend = (qdf.groupby("quarter")[["target (1 or 0)", "reach (1 or 0)", "open (1 or 0)", "click (1 or 0)"]]
-         .sum()
-         .rename(columns={
-             "target (1 or 0)": "Target",
-             "reach (1 or 0)": "Reach",
-             "open (1 or 0)": "Open",
-             "click (1 or 0)": "Click"
-         })
-         .reset_index())
-
-trend_long = trend.melt("quarter", var_name="Stage", value_name="Count")
-
-chart = (
-    alt.Chart(trend_long)
-    .mark_bar()
-    .encode(
-        x=alt.X("quarter:N", title="Quarter", sort=["2024Q1", "2024Q2", "2024Q3", "2024Q4"]),
-        y=alt.Y("Count:Q"),
-        color="Stage:N",
-        column=alt.Column("Stage:N", header=alt.Header(labelOrient="bottom", title=""))
-    )
-    .properties(height=250)
+# ---------------- FUNNEL CHART ----------------
+st.write("---")
+st.subheader("🎯 Funnel Summary")
+funnel_df = pd.DataFrame({
+    "Stage": ["Target", "Reach", "Open", "Click"],
+    "Count": [tgt, rch, opn, clk]
+})
+bar = (
+    alt.Chart(funnel_df)
+    .mark_bar(size=60, color="#4E79A7")
+    .encode(x=alt.X("Stage:N", sort=["Target", "Reach", "Open", "Click"]),
+            y=alt.Y("Count:Q", title="HCP Count"),
+            tooltip=["Stage", "Count"])
+    .properties(height=300)
 )
-st.altair_chart(chart, use_container_width=True)
+st.altair_chart(bar, use_container_width=True)
 
-# ---------------- Funnel Summary Table ----------------
-st.markdown("#### Funnel Summary")
-funnel_tbl = pd.DataFrame({
+# ---------------- MONTHLY TREND ----------------
+st.subheader("📅 Monthly Engagement Trend")
+trend = filtered.copy()
+trend["month"] = trend["date of campaign"].dt.to_period("M").astype(str)
+monthly = trend.groupby("month")[["target (1 or 0)", "reach (1 or 0)", "open (1 or 0)", "click (1 or 0)"]].sum().reset_index()
+monthly_long = monthly.melt("month", var_name="Stage", value_name="Count")
+
+line_chart = (
+    alt.Chart(monthly_long)
+    .mark_line(point=True)
+    .encode(
+        x="month:N",
+        y="Count:Q",
+        color="Stage:N",
+        strokeDash="Stage:N",
+        tooltip=["month", "Stage", "Count"]
+    )
+    .properties(height=350)
+)
+st.altair_chart(line_chart, use_container_width=True)
+
+# ---------------- TABLE ----------------
+st.subheader("📊 Funnel Detail Table")
+tbl = pd.DataFrame({
     "Stage": ["Target", "Reach", "Open", "Click"],
     "Count": [tgt, rch, opn, clk],
-    "Rate vs Previous": [
-        1.0,
-        (rch / tgt) if tgt else np.nan,
-        (opn / rch) if rch else np.nan,
-        (clk / opn) if opn else np.nan
-    ]
+    "Rate vs Previous": [1.0,
+                         rch / tgt if tgt else np.nan,
+                         opn / rch if rch else np.nan,
+                         clk / opn if opn else np.nan]
 })
-st.dataframe(funnel_tbl.style.format({"Count": "{:,.0f}", "Rate vs Previous": "{:.0%}"}), use_container_width=True)
+st.dataframe(tbl.style.format({"Count": "{:,.0f}", "Rate vs Previous": "{:.0%}"}).highlight_max(subset=["Count"], color="#D0E0FF"), use_container_width=True)
 
-# ---------------- Closing Note ----------------
-st.caption(
-    "Demo with dummy data. For production, connect to CRM/marketing platforms and schedule refreshes in Power BI/Streamlit."
-)
+st.write("---")
+st.caption("💡 Demo project with dummy data for portfolio visualization — Dhwani Teli (MS Business Analytics)")
