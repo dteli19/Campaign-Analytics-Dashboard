@@ -162,24 +162,22 @@ with col4:
 
 # ---------------- MONTHLY TREND (Unique HCPs) ----------------
 st.write("---")
-st.subheader("📅 Monthly Engagement Trend (Unique HCPs)")
+st.subheader("📅 Engagement Trend")
 
 # Create month column
 trend = filtered.copy()
-trend["month"] = trend["date of campaign"].dt.to_period("M").astype(str)
+trend["quarter"] = trend["date of campaign"].dt.to_period("Q").astype(str)
 
 # Calculate unique HCPs for each stage per month
 monthly_unique = (
     trend.groupby("month")
     .agg({
-        "hcp id": "nunique",
         "target (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique(),
         "reach (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique(),
         "open (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique(),
         "click (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique()
     })
     .rename(columns={
-        "hcp id": "Total HCPs",
         "target (1 or 0)": "Target",
         "reach (1 or 0)": "Reach",
         "open (1 or 0)": "Open",
@@ -189,14 +187,14 @@ monthly_unique = (
 )
 
 # Melt data for Altair
-monthly_long = monthly_unique.melt("month", var_name="Stage", value_name="Unique HCPs")
+monthly_long = monthly_unique.melt("quarter", var_name="Stage", value_name="Unique HCPs")
 
 # Create line chart
 trend_chart = (
-    alt.Chart(monthly_long)
+    alt.Chart(quarterly_long)
     .mark_line(point=True)
     .encode(
-        x=alt.X("month:N", title="Month", sort=None),
+        x=alt.X("Quarter:N", title="Quarter", sort=None),
         y=alt.Y("Unique HCPs:Q", title="Unique HCP Count"),
         color=alt.Color("Stage:N", title="Stage"),
         tooltip=["month", "Stage", "Unique HCPs"]
