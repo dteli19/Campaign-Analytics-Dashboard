@@ -1,13 +1,14 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
 
-# ---------------- PAGE CONFIG ----------------
+# ---------------- Page Setup ----------------
 st.set_page_config(page_title="Campaign Analytics — Portfolio", page_icon="📊", layout="wide")
+st.title("📊 Campaign Analytics Dashboard — Portfolio App")
+st.write("---")
 
-# ---------------- DUMMY DATA ----------------
+# ---------------- Hardcoded Dummy Data (500 HCPs, 2 brands, 4 campaigns, 1 year) ----------------
 def build_dummy(seed=17, n_rows=6000):
     np.random.seed(seed)
     rng = np.random.default_rng(seed)
@@ -20,7 +21,7 @@ def build_dummy(seed=17, n_rows=6000):
     regions = ["N", "S", "E", "W"]
 
     dates = pd.date_range("2024-01-01", "2024-12-31", freq="D")
-    hcp_pool = [f"HCP{str(i).zfill(5)}" for i in range(1000, 1500)]
+    hcp_pool = [f"HCP{str(i).zfill(5)}" for i in range(1000, 1500)]  # exactly 500 HCPs
 
     hcp_ids = rng.choice(hcp_pool, size=n_rows, replace=True)
     brand_name = rng.choice(brands, size=n_rows, replace=True)
@@ -29,6 +30,7 @@ def build_dummy(seed=17, n_rows=6000):
     hcp_specialty = rng.choice(specialties, size=n_rows, replace=True)
     hcp_region = rng.choice(regions, size=n_rows, replace=True, p=[0.3, 0.25, 0.25, 0.2])
 
+    # Funnel dependencies
     target = rng.choice([0, 1], size=n_rows, replace=True, p=[0.15, 0.85])
     reach = np.where(target == 1, rng.choice([0, 1], size=n_rows, replace=True, p=[0.32, 0.68]), 0)
 
@@ -64,25 +66,45 @@ def build_dummy(seed=17, n_rows=6000):
 
 df = build_dummy()
 
-# ---------------- HEADER ----------------
-st.markdown("<h1 style='text-align:center; color:#2F5496;'>📊 Campaign Analytics Dashboard</h1>", unsafe_allow_html=True)
-st.markdown("<h5 style='text-align:center; color:gray;'>Portfolio Demo — Dhwani Teli</h5>", unsafe_allow_html=True)
-st.write("---")
+# ---------------- Sections ----------------
+st.header("Context")
+st.markdown(
+    """
+Pharma brands use multi-touch campaigns to engage healthcare professionals (HCPs). Stakeholders need a simple,
+repeatable view to understand how well campaigns move HCPs through the funnel (**Target → Reach → Open → Click**),
+and which segments (brand, campaign, region, specialty) drive the most engagement.
+"""
+)
 
-# ---------------- CONTEXT SECTIONS ----------------
-with st.expander("🧩 Context & Problem Statement", expanded=True):
-    st.markdown("""
-**Context:**  
-Two pharmaceutical brands — *Brand A* and *Brand B* — ran a total of four digital campaigns in 2024 targeting 500 healthcare professionals (HCPs).  
-The goal is to evaluate how effectively each campaign moved HCPs through the marketing funnel (**Target → Reach → Open → Click**)  
-and identify which segments (region or specialty) performed best.  
+st.header("Problem Statement")
+st.markdown(
+    """
+**Goal:** Provide a compact analytics app to:
+- Evaluate campaign effectiveness over a year  
+- Compare two brands and their campaigns (2 each)  
+- Spot high-engagement HCP segments by region/specialty  
+- Summarize results for a portfolio-ready narrative
+"""
+)
 
-**Problem Statement:**  
-Marketing teams need a clear view of campaign performance to:
-- Measure overall engagement across campaigns  
-- Compare effectiveness by brand and campaign  
-- Identify audience segments driving higher engagement  
-""")
+st.header("About the Data (Dummy)")
+st.markdown(
+    """
+This dataset is **simulated** for demonstration:
+- **500 HCPs** across **6 specialties** and **4 regions (N/S/E/W)**
+- **2 brands** (*Brand A*, *Brand B*), **4 campaigns** (2 per brand)
+- 1 year of touchpoints (2024) with binary funnel events: **target**, **reach**, **open**, **click**
+"""
+)
+
+st.header("Actions")
+st.markdown(
+    """
+1) Generated a realistic dummy dataset with dependencies between funnel stages.  
+2) Built filters for brand, campaign, region, and specialty.  
+3) Computed KPIs and constructed a quarterly engagement trend and funnel summary.
+"""
+)
 
 # ---------------- FILTERS ----------------
 st.write("---")
