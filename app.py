@@ -170,7 +170,7 @@ trend["quarter"] = trend["date of campaign"].dt.to_period("Q").astype(str)
 
 # Calculate unique HCPs for each stage per month
 monthly_unique = (
-    trend.groupby("month")
+    trend.groupby("Quarter")
     .agg({
         "target (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique(),
         "reach (1 or 0)": lambda x: trend.loc[x.index[x == 1], "hcp id"].nunique(),
