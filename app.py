@@ -87,7 +87,7 @@ st.markdown(
 """
 )
 
-st.header("About the Data (Dummy)")
+st.header("About the Data")
 st.markdown(
     """
 This dataset is **simulated** for demonstration:
@@ -194,12 +194,12 @@ trend_chart = (
     alt.Chart(quarter_long)
     .mark_bar(point=True)
     .encode(
-        x=alt.X("quarter:N", title="Quarter", sort=["2024Q1", "2024Q2", "2024Q3", "2024Q4"]),
+        x=alt.X("quarter:N", title="Quarter", sort=["Q1", "Q2", "Q3", "Q4"]),
         y=alt.Y("Unique HCPs:Q", title="Unique HCP Count"),
         color=alt.Color("Stage:N", title="Stage",
                         scale=alt.Scale(
                             domain=["Target", "Reach", "Open", "Click"],
-                            range=["#4E79A7", "#59A14F", "#F1C232", "#E15759"]
+                            range=["#E8EEF9", "#DDEFE2", "#FFF3CD", "#F8D7DA"]
                         )),
         tooltip=["quarter", "Stage", "Unique HCPs"]
     )
