@@ -116,7 +116,7 @@ with c1:
 with c2:
     f_campaign = st.multiselect("Select Campaign(s)", df["campaign name"].unique(), default=list(df["campaign name"].unique()))
 with c3:
-    f_region = st.multiselect("Select Region(s)", df["hcp region (North/South/East/West)"].unique(), default=list(df["hcp region (N/S/E/W)"].unique()))
+    f_region = st.multiselect("Select Region(s)", df["hcp region (North/South/East/West)"].unique(), default=list(df["hcp region (North/South/East/West)"].unique()))
 with c4:
     f_specialty = st.multiselect("Select Specialty(s)", df["hcp specialty"].unique(), default=list(df["hcp specialty"].unique()))
 
